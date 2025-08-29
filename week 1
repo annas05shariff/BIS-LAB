@@ -1,0 +1,78 @@
+import numpy as np
+import random
+import matplotlib.pyplot as plt
+
+
+def fitness_function(x):
+    return x * np.sin(10 * np.pi * x) + 1
+
+
+POP_SIZE = 50       
+GENS = 100          
+MUT_RATE = 0.1      
+CROSS_RATE = 0.8    
+X_BOUND = [0, 1]    
+
+
+def init_population():
+    return np.random.rand(POP_SIZE, 1)  
+
+
+def get_fitness(pop):
+    return fitness_function(pop)
+
+
+def select(pop, fitness):
+    probs = (fitness / fitness.sum()).ravel() 
+    idx = np.random.choice(np.arange(POP_SIZE), size=POP_SIZE, replace=True, p=probs)
+    return pop[idx]
+
+
+
+def crossover(parent, pop):
+    if np.random.rand() < CROSS_RATE:
+        mate = pop[np.random.randint(POP_SIZE)]
+        cross_point = np.random.rand()
+        child = cross_point * parent + (1 - cross_point) * mate
+        return child
+    return parent
+
+
+def mutate(child):
+    if np.random.rand() < MUT_RATE:
+        child += np.random.normal(0, 0.1)  
+    return np.clip(child, X_BOUND[0], X_BOUND[1])
+
+
+pop = init_population()
+best_record = []
+
+for gen in range(GENS):
+    fitness = get_fitness(pop)
+    best_idx = np.argmax(fitness)
+    best_record.append(fitness[best_idx])
+
+    
+    pop = select(pop, fitness)
+
+   
+    new_pop = []
+    for parent in pop:
+        child = crossover(parent, pop)
+        child = mutate(child)
+        new_pop.append(child)
+    pop = np.array(new_pop)
+
+
+final_fitness = get_fitness(pop)
+best_idx = np.argmax(final_fitness)
+best_x, best_y = pop[best_idx][0], final_fitness[best_idx][0]
+
+print(f"Best solution found: x = {best_x:.4f}, f(x) = {best_y:.4f}")
+
+
+plt.plot(best_record)
+plt.xlabel("Generation")
+plt.ylabel("Best Fitness")
+plt.title("Genetic Algorithm Optimization")
+plt.show()
